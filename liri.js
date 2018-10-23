@@ -7,7 +7,15 @@ var request = require('request');
 var spotify = new Spotify(keys.spotify);
 var client = new Twitter(keys.twitter);
 
-
+writeLog=(log, lgn)=>{
+  fs.appendFile('log.txt', `==${lgn}==\n ${log}`, function(err){
+    if(err){
+      console.log(err)
+    }else{
+      console.log(`\n\t${lgn} has been logged\n`)
+    }
+  });
+};
 
 
 runLIRI=(input, input2)=>{
@@ -33,12 +41,14 @@ runLIRI=(input, input2)=>{
         var track = data.tracks.items;
         track.forEach(i => {
           console.log(
-            `==========RESULT ${(track.indexOf(i))+1}==========\n 
+            `\n\t==========RESULT ${(track.indexOf(i))+1}==========\n 
             \tArtist: ${i.artists[0].name} \n 
             \tSong: ${i.name} \n          
             \tAlbum:  ${i.album.name}\n 
             \tSong Preview: ${i.external_urls.spotify}`);
-        });
+
+          });
+          writeLog(`\n\t${track.length} results`, `Spotify Search of ${input2}\n`);
       });
     break;
   case 'movie-this':
@@ -48,9 +58,10 @@ runLIRI=(input, input2)=>{
       return console.log(error)
     }
     if (response.statusCode === 200){
+
       var movie = JSON.parse(body)
       console.log(
-        `================${movie.Title}\n
+        `\t=======${movie.Title}========\n
          \tYear: ${movie.Year}\n
          \tRated: ${movie.Rated}\n
          \tCritic Ratings: \n
@@ -61,7 +72,8 @@ runLIRI=(input, input2)=>{
          \tActors: ${movie.Actors} \n
          \tLanguage: ${movie.Language}\n
          \tSynopsis: ${movie.Plot}\n
-           `) 
+        `);
+        writeLog(`\n\tTitle:${movie.Title} \n Rated: ${movie.Rated}\n`, `OMDB Search of ${input2}`) 
     }
   })
     break;
