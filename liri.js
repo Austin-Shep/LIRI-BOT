@@ -8,58 +8,78 @@ var spotify = new Spotify(keys.spotify);
 var client = new Twitter(keys.twitter);
 
 writeLog=(log, lgn)=>{
-  fs.appendFile('log.txt', `==${lgn}==\n ${log}`, function(err){
+  fs.appendFile('log.txt', `\n=${lgn}= ${log}`, function(err){
     if(err){
       console.log(err)
     }else{
-      console.log(`\n\t${lgn} has been logged\n`)
+      console.log(`${lgn} has been logged`)
     }
   });
 };
 
+runTwitter=(input2)=>{
+  var params;
+  if(input2){
+    params = {screen_name: input2};
+  }else{
+    params = {screen_name: 'Austin37242529'};
+  }
 
-runLIRI=(input, input2)=>{
-  switch(input){
-
-  case 'my-tweets':
-  var params = {screen_name: 'Austin37242529'};
-    client.get('statuses/user_timeline', params, function(error, tweets, response) {
-      if(error){
-        console.log(error, `response code ${response}`);
-      }
-      if (!error) {
-        console.log(tweets);
-      }
-  });
-
-    break;
-  case 'spotify-this-song':
-      spotify.search({ type: 'track', query: input2 }, function(err, data) {
-        if (err) {
-          return console.log('Error occurred: ' + err);
-        }
-        var track = data.tracks.items;
-        track.forEach(i => {
-          console.log(
-            `\n\t==========RESULT ${(track.indexOf(i))+1}==========\n 
-            \tArtist: ${i.artists[0].name} \n 
-            \tSong: ${i.name} \n          
-            \tAlbum:  ${i.album.name}\n 
-            \tSong Preview: ${i.external_urls.spotify}`);
-
-          });
-          writeLog(`\n\t${track.length} results`, `Spotify Search of ${input2}\n`);
+  client.get('statuses/user_timeline', params, function(error, tweets, response) {
+    if(error){
+      console.log(error, `response code ${response}`);
+    }
+    if (!error) {
+      tweets.forEach(e => {
+      console.log(
+        `\t'${e.created_at}'
+        '${e.user.name}':
+        ${e.text}`);
       });
-    break;
-  case 'movie-this':
-  //display a bunch of shit from the omdb all pretty like
-  request(`http://www.omdbapi.com/?apikey=2e81f936&t=${input2.split(' ').join('+')}`, function(error, response, body) {
+      writeLog(`${tweets.length} results`, `Twitter Search of ${JSON.stringify(params)}`);
+    }
+  });
+};
+runSpotify=(input2)=>{
+  spotify.search(
+    { type: 'track', query: input2 },
+     function(err, data) {
+      if (err) {
+        return console.log(
+          'Error occurred: ' + err
+          );
+      }
+    var track = data.tracks.items;
+    track.forEach(i => {
+      console.log(
+        `\n\t==========RESULT ${(track.indexOf(i))+1}==========\n 
+        \tArtist: ${i.artists[0].name} \n 
+        \tSong: ${i.name} \n          
+        \tAlbum:  ${i.album.name}\n 
+        \tSong Preview:
+        ${i.external_urls.spotify}`);
+
+      });
+      writeLog(
+        `${track.length} results`, 
+        `Spotify Search of ${input2}\n`
+        );
+  });
+};
+
+runOMDB=(input2)=>{
+  request(
+    `http://www.omdbapi.com/?apikey=2e81f936&t=${input2.split(' ').join('+')}`,
+     function(error, response, body) {
+
     if(error){
       return console.log(error)
     }
+
     if (response.statusCode === 200){
 
-      var movie = JSON.parse(body)
+      var movie = JSON.parse(body);
+
       console.log(
         `\t=======${movie.Title}========\n
          \tYear: ${movie.Year}\n
@@ -73,10 +93,32 @@ runLIRI=(input, input2)=>{
          \tLanguage: ${movie.Language}\n
          \tSynopsis: ${movie.Plot}\n
         `);
-        writeLog(`\n\tTitle:${movie.Title} \n Rated: ${movie.Rated}\n`, `OMDB Search of ${input2}`) 
+
+        writeLog(
+          `Title:${movie.Title} Rated: ${movie.Rated}`,
+          `OMDB Search of ${input2}\n`
+        ) 
     }
   })
+}
+
+
+
+runLIRI=(input, input2)=>{
+  switch(input){
+
+  case 'my-tweets':
+    runTwitter(input2)
     break;
+
+  case 'spotify-this-song':
+    runSpotify(input2)
+    break;
+
+  case 'movie-this':
+    runOMDB(input2)
+    break;
+
 }};
 
 //=======argumrents
